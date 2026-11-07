@@ -124,6 +124,8 @@
       transform: rotate(32deg);
     }
     .poster::after { width: 34px; height: 185px; transform: rotate(-27deg); }
+    .poster.has-art::before, .poster.has-art::after { display: none; }
+    .poster.has-art svg { display: block; width: 100%; height: 100%; }
     .poster-mark {
       position: relative;
       z-index: 1;
@@ -188,7 +190,7 @@
       <section class="tier" data-tier="miss"><h2 class="tier-label">C</h2><div class="dropzone" data-zone="miss"></div></section>
       <section class="tier" data-tier="unrated"><h2 class="tier-label">미분류</h2><div class="dropzone" data-zone="unrated"></div></section>
     </section>
-    <p class="help">모든 포스터형 그래픽은 이 HTML 안에 들어 있습니다. 배치는 현재 브라우저에 자동 저장됩니다.</p>
+    <p class="help">기본 영화 5편의 포스터는 인터넷에서 불러오며, 불러오지 못하면 HTML 안의 그림이 대신 보입니다. 배치는 현재 브라우저에 자동 저장됩니다.</p>
   </main>
 
   <script>
@@ -199,6 +201,51 @@
       const INITIAL_TITLES = ["기생충", "어쩔수가 없다", "살인의 추억", "올드보이", "아가씨"];
       const TIERS = ["life", "strong", "good", "miss", "unrated"];
       const COLORS = ["#56252f", "#183a54", "#564117", "#39204f", "#174437", "#522a22"];
+
+      // 영화별 포스터 그림 (외부 파일 없이 HTML 안에 직접 그린 SVG, 고정된 코드만 사용)
+      const svg = (body) => `<svg viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${body}</svg>`;
+      const POSTERS = {
+        "기생충": svg(`<defs><linearGradient id="pg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f5d46"/><stop offset="1" stop-color="#0d1a14"/></linearGradient></defs>
+          <rect width="200" height="300" fill="url(#pg1)"/>
+          <circle cx="150" cy="55" r="22" fill="#e9e3c4" opacity=".85"/>
+          <rect x="40" y="95" width="120" height="70" fill="#d8d2b8"/><polygon points="30,95 100,55 170,95" fill="#7b4a36"/>
+          <rect x="62" y="112" width="30" height="26" fill="#233a2f"/><rect x="112" y="112" width="30" height="26" fill="#f0c65a"/>
+          <path d="M0 300V250h40v-20h40v-20h40v-20h40v-20h40V300z" fill="#08110d"/>
+          <path d="M0 250h40v-20h40v-20h40v-20h40v-20h40" fill="none" stroke="#6fae8a" stroke-width="2"/>
+          <rect x="0" y="262" width="200" height="38" fill="#08110d"/><rect x="64" y="268" width="26" height="14" rx="3" fill="#3e5a4b"/>`),
+        "어쩔수가없다": svg(`<rect width="200" height="300" fill="#2a2d36"/>
+          <rect x="0" y="0" width="200" height="120" fill="#3b2024"/>
+          <rect x="52" y="70" width="96" height="120" rx="6" fill="#e8e6df"/><rect x="62" y="84" width="76" height="6" fill="#9a968b"/><rect x="62" y="100" width="60" height="6" fill="#9a968b"/><rect x="62" y="116" width="70" height="6" fill="#9a968b"/>
+          <polygon points="100,150 88,170 100,235 112,170" fill="#b3202c"/><polygon points="92,142 108,142 112,158 88,158" fill="#8a1822"/>
+          <circle cx="100" cy="58" r="20" fill="#c9c6bb"/><rect x="0" y="262" width="200" height="38" fill="#171a20"/>`),
+        "살인의추억": svg(`<defs><linearGradient id="pg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a441"/><stop offset="1" stop-color="#4a3414"/></linearGradient></defs>
+          <rect width="200" height="300" fill="url(#pg3)"/>
+          <circle cx="100" cy="82" r="38" fill="#f3d27a" opacity=".7"/>
+          <g stroke="#3c2a0e" stroke-width="3" stroke-linecap="round" fill="none"><path d="M20 300V190M45 300V170M70 300V200M130 300V195M155 300V170M180 300V190"/><path d="M20 190l-8-14M20 200l8-14M45 170l-8-14M45 180l8-14M70 200l-8-14M70 210l8-14M130 195l-8-14M130 205l8-14M155 170l-8-14M155 180l8-14M180 190l-8-14M180 200l8-14"/></g>
+          <ellipse cx="100" cy="262" rx="30" ry="22" fill="#14100a"/><ellipse cx="100" cy="262" rx="22" ry="15" fill="#000"/>`),
+        "올드보이": svg(`<rect width="200" height="300" fill="#10171a"/>
+          <polygon points="0,0 70,95 70,205 0,300" fill="#1d2b2f"/><polygon points="200,0 130,95 130,205 200,300" fill="#16232a"/>
+          <polygon points="70,95 130,95 130,205 70,205" fill="#050a0c"/>
+          <polygon points="70,95 130,95 200,0 0,0" fill="#223539"/><polygon points="70,205 130,205 200,300 0,300" fill="#0b1315"/>
+          <g stroke="#40666b" stroke-width="1.5"><line x1="0" y1="0" x2="70" y2="95"/><line x1="200" y1="0" x2="130" y2="95"/><line x1="0" y1="300" x2="70" y2="205"/><line x1="200" y1="300" x2="130" y2="205"/></g>
+          <rect x="94" y="128" width="12" height="62" rx="3" fill="#aeb7b9" transform="rotate(25 100 160)"/><rect x="82" y="124" width="36" height="16" rx="3" fill="#cfd6d8" transform="rotate(25 100 160)"/>`),
+        "아가씨": svg(`<defs><linearGradient id="pg5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a1f4a"/><stop offset="1" stop-color="#1c0c1b"/></linearGradient></defs>
+          <rect width="200" height="300" fill="url(#pg5)"/>
+          <path d="M40 300V130a60 60 0 0 1 120 0V300z" fill="none" stroke="#e9b8d0" stroke-width="3"/>
+          <path d="M58 300V132a42 42 0 0 1 84 0V300z" fill="#1c0c1b" stroke="#e9b8d0" stroke-width="1.5"/>
+          <circle cx="100" cy="150" r="16" fill="#e9b8d0"/><path d="M92 160h16l6 34H86z" fill="#e9b8d0"/><circle cx="100" cy="150" r="5" fill="#7a1f4a"/>
+          <path d="M20 60c40-30 120 30 160 0" fill="none" stroke="#f2d6e3" stroke-width="2"/><circle cx="160" cy="48" r="6" fill="#f2d6e3" opacity=".8"/>`)
+      };
+      // 실제 포스터 주소 (영화_A_초안.html과 같음). 불러오지 못하면 위의 SVG 그림이 대신 보임
+      const POSTER_URLS = {
+        "기생충": "https://i.ebayimg.com/00/s/MTYwMFgxMTMy/z/jgsAAOSwl9FdsYwL/%24_57.JPG?set_id=8800005007",
+        "어쩔수가없다": "https://felixonline.co.uk/content/images/2025/10/new-poster-for-dark-comedy-thriller-no-other-choice-v0-hn5gooaq46lf1.webp",
+        "살인의추억": "https://thumb.mt.co.kr/cdn-cgi/image/w%3D1200%2Ch%3D1714%2Cfit%3Dcover%2Cbg%3Dwhilte%2Cf%3Dauto%2Cquality%3Dhigh%2Csharpen%3D2%2Cg%3Dface/21/2019/09/2019091820332134719_1.jpg",
+        "올드보이": "https://t1.daumcdn.net/brunch/service/user/2fG8/image/F_XlfgVN-GkbwtQKJvip57VIlyE.jpg",
+        "아가씨": "https://media.kg-portal.ru/movies/a/ahgassi/posters/ahgassi_8.jpg"
+      };
+      const posterUrlFor = (title) => POSTER_URLS[title.trim().replace(/\s+/g, "").toLocaleLowerCase("ko-KR")] || null;
+      const posterFor = (title) => POSTERS[title.trim().replace(/\s+/g, "").toLocaleLowerCase("ko-KR")] || null;
 
       const makeMovie = (title, index) => ({
         id: `movie-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
@@ -266,11 +313,28 @@
         poster.className = "poster";
         poster.style.setProperty("--poster-a", COLORS[Number(movie.color) % COLORS.length] || COLORS[0]);
         poster.style.setProperty("--accent", COLORS[(Number(movie.color) + 2) % COLORS.length] || COLORS[2]);
-        const mark = document.createElement("span");
-        mark.className = "poster-mark";
-        mark.textContent = titleMark(movie.title);
-        mark.setAttribute("aria-hidden", "true");
-        poster.append(mark);
+        const art = posterFor(movie.title);
+        if (art) {
+          poster.classList.add("has-art");
+          poster.innerHTML = art;
+          const url = posterUrlFor(movie.title);
+          if (url) {
+            const img = document.createElement("img");
+            img.alt = "";
+            img.loading = "lazy";
+            img.referrerPolicy = "no-referrer";
+            img.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2";
+            img.addEventListener("error", () => img.remove());
+            img.src = url;
+            poster.append(img);
+          }
+        } else {
+          const mark = document.createElement("span");
+          mark.className = "poster-mark";
+          mark.textContent = titleMark(movie.title);
+          mark.setAttribute("aria-hidden", "true");
+          poster.append(mark);
+        }
 
         const title = document.createElement("span");
         title.className = "movie-title";
