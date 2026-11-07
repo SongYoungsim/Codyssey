@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만의 한국영화 티어리스트 - A안</title>
+<style>
+body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#111318;color:#fff}
+.wrap{max-width:1200px;margin:auto;padding:28px 18px 60px}
+h1{text-align:center;font-size:42px;margin:20px 0 8px}
+.sub{text-align:center;color:#aaa;margin-bottom:24px}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+input{padding:12px 14px;border-radius:10px;border:1px solid #444;background:#171a20;color:#fff;min-width:280px}
+button{padding:12px 16px;border:0;border-radius:10px;font-weight:700;cursor:pointer}
+.add{background:#f0c36a}.reset{background:#333;color:#fff}
+.tier{display:grid;grid-template-columns:160px 1fr;background:#1b1f27;border:1px solid #343c49;border-radius:16px;overflow:hidden;margin:12px 0;min-height:160px}
+.label{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px}
+.life{background:#a73545}.strong{background:#c97821}.good{background:#397e60}.miss{background:#45607f}.unrated{background:#505866}
+.zone{display:flex;gap:12px;flex-wrap:wrap;padding:15px;min-height:160px}
+.card{width:140px;background:#0e1116;border:1px solid #333;border-radius:12px;overflow:hidden;cursor:grab}
+.poster{height:195px;background:#222;overflow:hidden}
+.poster img{width:100%;height:100%;object-fit:cover;display:block}
+.fallback{height:100%;display:flex;align-items:flex-end;padding:12px;background:linear-gradient(145deg,#4d5665,#1a1e25);font-weight:800}
+.title{text-align:center;padding:10px;font-size:13px;font-weight:700}
+.drag{outline:2px dashed #f0c36a}
+.picker{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center}
+.picker.open{display:flex}.box{background:#20242c;padding:18px;border-radius:14px;width:min(380px,90vw)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid button{background:#353b46;color:#fff}
+.status{text-align:center;color:#bbb;min-height:20px;margin-bottom:8px}
+@media(max-width:700px){.tier{grid-template-columns:1fr}.label{padding:10px}.zone{justify-content:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>나만의 한국영화 티어리스트</h1>
+<div class="sub">스토리와 여운이 강한 한국영화를 나만의 기준으로 나눠보세요.</div>
+<div class="controls">
+<input id="movieInput" placeholder="추가할 영화 제목">
+<button class="add" id="addBtn">영화 추가</button>
+<button class="reset" id="resetBtn">처음으로</button>
+</div>
+<div class="status" id="status"></div>
+<div class="tier"><div class="label life">인생영화</div><div class="zone" data-zone="life"></div></div>
+<div class="tier"><div class="label strong">강력추천</div><div class="zone" data-zone="strong"></div></div>
+<div class="tier"><div class="label good">좋음</div><div class="zone" data-zone="good"></div></div>
+<div class="tier"><div class="label miss">아쉬움</div><div class="zone" data-zone="miss"></div></div>
+<div class="tier"><div class="label unrated">미분류</div><div class="zone" data-zone="unrated"></div></div>
+</div>
+<div class="picker" id="picker"><div class="box">
+<h3 id="pickerTitle">티어 선택</h3>
+<div class="grid">
+<button data-pick="life">인생영화</button><button data-pick="strong">강력추천</button>
+<button data-pick="good">좋음</button><button data-pick="miss">아쉬움</button>
+<button data-pick="unrated">미분류</button>
+</div>
+<button id="cancel" style="width:100%;margin-top:10px;background:#15181d;color:#fff">취소</button>
+</div></div>
+<script>
+const KEY="koreanMovieTier_A_v3";
+const initial=[
+{id:"m1",title:"기생충",tier:"unrated"},
+{id:"m2",title:"어쩔수가 없다",tier:"unrated"},
+{id:"m3",title:"살인의 추억",tier:"unrated"},
+{id:"m4",title:"올드보이",tier:"unrated"},
+{id:"m5",title:"아가씨",tier:"unrated"}];
+const posterMap={
+"기생충":"https://i.ebayimg.com/00/s/MTYwMFgxMTMy/z/jgsAAOSwl9FdsYwL/%24_57.JPG?set_id=8800005007",
+"어쩔수가 없다":"https://felixonline.co.uk/content/images/2025/10/new-poster-for-dark-comedy-thriller-no-other-choice-v0-hn5gooaq46lf1.webp",
+"살인의 추억":"https://thumb.mt.co.kr/cdn-cgi/image/w%3D1200%2Ch%3D1714%2Cfit%3Dcover%2Cbg%3Dwhilte%2Cf%3Dauto%2Cquality%3Dhigh%2Csharpen%3D2%2Cg%3Dface/21/2019/09/2019091820332134719_1.jpg",
+"올드보이":"https://t1.daumcdn.net/brunch/service/user/2fG8/image/F_XlfgVN-GkbwtQKJvip57VIlyE.jpg",
+"아가씨":"https://media.kg-portal.ru/movies/a/ahgassi/posters/ahgassi_8.jpg"};
+let movies;try{movies=JSON.parse(localStorage.getItem(KEY))||JSON.parse(JSON.stringify(initial))}catch(e){movies=JSON.parse(JSON.stringify(initial))}
+let selected=null;
+const status=document.getElementById("status"),picker=document.getElementById("picker"),input=document.getElementById("movieInput");
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function poster(title){const u=posterMap[title];if(u)return `<img src="${u}" alt="${esc(title)} 대표 포스터" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="fallback" style="display:none">${esc(title)}</div>`;return `<div class="fallback">${esc(title)}</div>`}
+function save(msg){localStorage.setItem(KEY,JSON.stringify(movies));status.textContent=msg||"저장되었습니다.";setTimeout(()=>status.textContent="",1300)}
+function render(){document.querySelectorAll(".zone").forEach(z=>z.innerHTML="");movies.forEach(m=>{const c=document.createElement("div");c.className="card";c.draggable=true;c.dataset.id=m.id;c.innerHTML=`<div class="poster">${poster(m.title)}</div><div class="title">${esc(m.title)}</div>`;c.addEventListener("dragstart",e=>e.dataTransfer.setData("text/plain",m.id));c.addEventListener("click",()=>{selected=m.id;document.getElementById("pickerTitle").textContent=`"${m.title}" 티어 선택`;picker.classList.add("open")});document.querySelector(`[data-zone="${m.tier}"]`).appendChild(c)})}
+document.querySelectorAll(".zone").forEach(z=>{z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("drag")});z.addEventListener("dragleave",()=>z.classList.remove("drag"));z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("drag");move(e.dataTransfer.getData("text/plain"),z.dataset.zone)})});
+function move(id,tier){const m=movies.find(x=>x.id===id);if(m){m.tier=tier;save("티어 배치를 저장했습니다.");render()}}
+document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{if(selected)move(selected,b.dataset.pick);picker.classList.remove("open");selected=null});
+document.getElementById("cancel").onclick=()=>picker.classList.remove("open");
+function add(){const t=input.value.trim();if(!t){status.textContent="영화 제목을 입력해 주세요.";return}movies.push({id:"m_"+Date.now(),title:t,tier:"unrated"});input.value="";save("새 영화를 추가했습니다.");render()}
+document.getElementById("addBtn").onclick=add;
+input.addEventListener("keydown",e=>{if(e.key==="Enter")add()});
+document.getElementById("resetBtn").onclick=()=>{if(confirm("처음 상태로 되돌릴까요?")){movies=JSON.parse(JSON.stringify(initial));localStorage.removeItem(KEY);save("초기화했습니다.");render()}};
+render();
+</script>
+</body>
+</html>

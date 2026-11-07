@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>나만의 한국영화 티어리스트 - B안</title>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --panel:#ffffff;
+      --text:#1e2430;
+      --muted:#6f7785;
+      --line:#dfe4ea;
+      --accent:#315efb;
+      --life:#d94b5b;
+      --strong:#e8932f;
+      --good:#42a776;
+      --miss:#607b9e;
+      --unrated:#8a93a3;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .app{
+      max-width:1280px;
+      margin:0 auto;
+      padding:24px;
+    }
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:20px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size:32px;
+      letter-spacing:-1px;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .top-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    button{
+      border:0;
+      border-radius:10px;
+      padding:11px 14px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .layout{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    .sidebar,.board{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:0 6px 18px rgba(25,35,55,.06);
+    }
+    .sidebar{
+      padding:18px;
+      position:sticky;
+      top:16px;
+    }
+    .sidebar h2{
+      margin:0 0 14px;
+      font-size:18px;
+    }
+    .sidebar input{
+      width:100%;
+      padding:12px 13px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      outline:none;
+      margin-bottom:10px;
+    }
+    .sidebar .primary{width:100%}
+    .guide{
+      margin-top:18px;
+      padding-top:16px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+    .save-state{
+      margin-top:14px;
+      padding:10px 12px;
+      background:#f0f4ff;
+      border-radius:10px;
+      color:#3450a4;
+      font-size:12px;
+      min-height:35px;
+    }
+    .board{padding:16px}
+    .tier{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      min-height:138px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+      margin-bottom:12px;
+      background:#fafbfc;
+    }
+    .tier:last-child{margin-bottom:0}
+    .tier-label{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:#fff;
+      font-weight:800;
+      font-size:18px;
+      padding:12px;
+    }
+    .tier[data-tier="life"] .tier-label{background:var(--life)}
+    .tier[data-tier="strong"] .tier-label{background:var(--strong)}
+    .tier[data-tier="good"] .tier-label{background:var(--good)}
+    .tier[data-tier="miss"] .tier-label{background:var(--miss)}
+    .tier[data-tier="unrated"] .tier-label{background:var(--unrated)}
+    .dropzone{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-content:flex-start;
+      padding:12px;
+      min-height:136px;
+    }
+    .dropzone.drag-over{
+      background:#eef3ff;
+      outline:2px dashed var(--accent);
+      outline-offset:-6px;
+    }
+    .movie-card{
+      width:104px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:10px;
+      overflow:hidden;
+      cursor:grab;
+      box-shadow:0 3px 10px rgba(25,35,55,.07);
+      transition:.15s ease;
+    }
+    .movie-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 16px rgba(25,35,55,.12);
+    }
+    .poster{
+      height:145px;
+      background:#e9edf2;
+      overflow:hidden;
+    }
+    .poster img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .fallback{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:flex-end;
+      padding:10px;
+      color:#fff;
+      font-weight:800;
+      font-size:15px;
+      line-height:1.25;
+      background:linear-gradient(145deg,#5c6574,#252a33);
+    }
+    .movie-title{
+      padding:8px 6px;
+      text-align:center;
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .picker{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.4);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:10;
+      padding:20px;
+    }
+    .picker.open{display:flex}
+    .picker-box{
+      width:min(400px,95vw);
+      background:#fff;
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.22);
+    }
+    .picker-box h3{
+      margin:0 0 12px;
+      font-size:18px;
+    }
+    .picker-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .picker-grid button{
+      background:#f2f4f7;
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+    .cancel{
+      width:100%;
+      margin-top:10px;
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--muted);
+    }
+
+    @media(max-width:850px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{position:static}
+    }
+    @media(max-width:640px){
+      .app{padding:14px}
+      .tier{grid-template-columns:1fr}
+      .tier-label{font-size:16px;padding:9px}
+      .dropzone{justify-content:center}
+      .movie-card{width:94px}
+      .poster{height:132px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>나만의 한국영화 티어리스트</h1>
+        <p class="sub">클릭 또는 드래그앤드롭으로 영화를 분류하고, 결과를 브라우저에 저장합니다.</p>
+      </div>
+      <div class="top-actions">
+        <button class="secondary" id="resetBtn">처음으로</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>영화 추가</h2>
+        <input id="movieInput" type="text" placeholder="영화 제목 입력" />
+        <button class="primary" id="addBtn">추가</button>
+
+        <div class="save-state" id="status">브라우저에 자동 저장됩니다.</div>
+
+        <div class="guide">
+          <strong>사용 방법</strong><br>
+          ① 카드를 끌어서 티어로 이동<br>
+          ② 또는 카드를 클릭해 티어 선택<br>
+          ③ 새 영화는 미분류에 추가<br>
+          ④ 처음으로 버튼으로 초기화
+        </div>
+      </aside>
+
+      <main class="board">
+        <section class="tier" data-tier="life">
+          <div class="tier-label">인생영화</div>
+          <div class="dropzone" data-zone="life"></div>
+        </section>
+
+        <section class="tier" data-tier="strong">
+          <div class="tier-label">강력추천</div>
+          <div class="dropzone" data-zone="strong"></div>
+        </section>
+
+        <section class="tier" data-tier="good">
+          <div class="tier-label">좋음</div>
+          <div class="dropzone" data-zone="good"></div>
+        </section>
+
+        <section class="tier" data-tier="miss">
+          <div class="tier-label">아쉬움</div>
+          <div class="dropzone" data-zone="miss"></div>
+        </section>
+
+        <section class="tier" data-tier="unrated">
+          <div class="tier-label">미분류</div>
+          <div class="dropzone" data-zone="unrated"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="picker" id="tierPicker">
+    <div class="picker-box">
+      <h3 id="pickerTitle">티어 선택</h3>
+      <div class="picker-grid">
+        <button data-pick="life">인생영화</button>
+        <button data-pick="strong">강력추천</button>
+        <button data-pick="good">좋음</button>
+        <button data-pick="miss">아쉬움</button>
+        <button data-pick="unrated">미분류</button>
+      </div>
+      <button class="cancel" id="pickerCancel">취소</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "koreanMovieTier_B_v1";
+
+    const initialMovies = [
+      { id: "m1", title: "기생충", tier: "unrated" },
+      { id: "m2", title: "어쩔수가 없다", tier: "unrated" },
+      { id: "m3", title: "살인의 추억", tier: "unrated" },
+      { id: "m4", title: "올드보이", tier: "unrated" },
+      { id: "m5", title: "아가씨", tier: "unrated" }
+    ];
+
+    const posterMap = {
+      "기생충": "https://i.ebayimg.com/00/s/MTYwMFgxMTMy/z/jgsAAOSwl9FdsYwL/%24_57.JPG?set_id=8800005007",
+      "어쩔수가 없다": "https://felixonline.co.uk/content/images/2025/10/new-poster-for-dark-comedy-thriller-no-other-choice-v0-hn5gooaq46lf1.webp",
+      "살인의 추억": "https://thumb.mt.co.kr/cdn-cgi/image/w%3D1200%2Ch%3D1714%2Cfit%3Dcover%2Cbg%3Dwhilte%2Cf%3Dauto%2Cquality%3Dhigh%2Csharpen%3D2%2Cg%3Dface/21/2019/09/2019091820332134719_1.jpg",
+      "올드보이": "https://t1.daumcdn.net/brunch/service/user/2fG8/image/F_XlfgVN-GkbwtQKJvip57VIlyE.jpg",
+      "아가씨": "https://media.kg-portal.ru/movies/a/ahgassi/posters/ahgassi_8.jpg"
+    };
+
+    let movies = loadMovies();
+    let selectedMovieId = null;
+
+    const input = document.getElementById("movieInput");
+    const statusEl = document.getElementById("status");
+    const picker = document.getElementById("tierPicker");
+    const pickerTitle = document.getElementById("pickerTitle");
+
+    function cloneInitial(){
+      return JSON.parse(JSON.stringify(initialMovies));
+    }
+
+    function loadMovies(){
+      try{
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : cloneInitial();
+      }catch(e){
+        return cloneInitial();
+      }
+    }
+
+    function saveMovies(message="자동 저장되었습니다."){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
+      statusEl.textContent = message;
+      setTimeout(() => {
+        if(statusEl.textContent === message){
+          statusEl.textContent = "브라우저에 자동 저장됩니다.";
+        }
+      }, 1500);
+    }
+
+    function escapeHtml(str){
+      return str.replace(/[&<>"']/g, ch => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[ch]));
+    }
+
+    function fallbackHtml(title){
+      return `<div class="fallback">${escapeHtml(title)}</div>`;
+    }
+
+    function posterHtml(title){
+      const url = posterMap[title];
+      if(!url) return fallbackHtml(title);
+      return `
+        <img src="${url}" alt="${escapeHtml(title)} 대표 포스터"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="fallback" style="display:none">${escapeHtml(title)}</div>
+      `;
+    }
+
+    function render(){
+      document.querySelectorAll(".dropzone").forEach(zone => zone.innerHTML = "");
+
+      movies.forEach(movie => {
+        const card = document.createElement("div");
+        card.className = "movie-card";
+        card.draggable = true;
+        card.dataset.id = movie.id;
+
+        card.innerHTML = `
+          <div class="poster">${posterHtml(movie.title)}</div>
+          <div class="movie-title">${escapeHtml(movie.title)}</div>
+        `;
+
+        card.addEventListener("dragstart", e => {
+          e.dataTransfer.setData("text/plain", movie.id);
+        });
+
+        card.addEventListener("click", () => openPicker(movie.id));
+
+        const zone = document.querySelector(`[data-zone="${movie.tier}"]`);
+        if(zone) zone.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll(".dropzone").forEach(zone => {
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.classList.add("drag-over");
+      });
+      zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.classList.remove("drag-over");
+        const id = e.dataTransfer.getData("text/plain");
+        moveMovie(id, zone.dataset.zone);
+      });
+    });
+
+    function moveMovie(id, tier){
+      const movie = movies.find(m => m.id === id);
+      if(!movie) return;
+      movie.tier = tier;
+      saveMovies("티어 변경을 저장했습니다.");
+      render();
+    }
+
+    function openPicker(id){
+      selectedMovieId = id;
+      const movie = movies.find(m => m.id === id);
+      pickerTitle.textContent = movie ? `"${movie.title}" 이동할 티어` : "티어 선택";
+      picker.classList.add("open");
+    }
+
+    function closePicker(){
+      picker.classList.remove("open");
+      selectedMovieId = null;
+    }
+
+    document.querySelectorAll("[data-pick]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if(selectedMovieId) moveMovie(selectedMovieId, btn.dataset.pick);
+        closePicker();
+      });
+    });
+
+    document.getElementById("pickerCancel").addEventListener("click", closePicker);
+    picker.addEventListener("click", e => {
+      if(e.target === picker) closePicker();
+    });
+
+    function addMovie(){
+      const title = input.value.trim();
+      if(!title){
+        statusEl.textContent = "영화 제목을 입력해 주세요.";
+        input.focus();
+        return;
+      }
+
+      movies.push({
+        id: "m_" + Date.now(),
+        title,
+        tier: "unrated"
+      });
+
+      input.value = "";
+      saveMovies("새 영화를 미분류에 추가했습니다.");
+      render();
+    }
+
+    document.getElementById("addBtn").addEventListener("click", addMovie);
+    input.addEventListener("keydown", e => {
+      if(e.key === "Enter") addMovie();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if(!confirm("처음 상태로 되돌릴까요? 추가한 영화와 티어 배치가 모두 초기화됩니다.")) return;
+      movies = cloneInitial();
+      localStorage.removeItem(STORAGE_KEY);
+      saveMovies("초기 상태로 되돌렸습니다.");
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
